@@ -34,7 +34,6 @@ public class App {
             if (socket != null) {
                 socket.close();
             }
-            Thread.currentThread().interrupt();
         } finally {
             executor.shutdownNow();
             try {

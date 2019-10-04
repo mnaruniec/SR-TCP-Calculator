@@ -74,12 +74,11 @@ public class App {
     }
 
     private static void sendBuffer(DataOutputStream outStream, int read) throws IOException {
-        outStream.writeInt(read);
         outStream.write(buffer, 0, read);
     }
 
     private static void sendTerminator(DataOutputStream outStream) throws IOException {
-        outStream.writeInt(-1);
+        outStream.write((byte)'\n');
         outStream.flush();
     }
 

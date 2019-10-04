@@ -62,22 +62,21 @@ public class WorkerThread implements Runnable {
             DataOutputStream outStream =
                     new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
         ) {
-            while (true) {
-                int len = inStream.readInt();
-                if (len == -1) {
-                    // received terminator
-                    break;
+            boolean gotNewline = false;
+            while (!gotNewline) {
+                int read = inStream.read(buffer, 0, BUFFER_SIZE);
+                if (read < 0) {
+                    this.log("Connection lost.");
+                    return;
                 }
-                int read = 0;
-                while (read < len) {
-                    int nowRead = inStream.read(buffer, 0, Math.min(len - read, BUFFER_SIZE));
-                    if (nowRead == -1) {
-                        this.log("Connection lost.");
-                        return;
-                    }
-                    read += nowRead;
-                    computation.processInput(buffer, nowRead);
+                if (read == 0) {
+                    continue;
                 }
+                if (buffer[read - 1] == '\n') {
+                    gotNewline = true;
+                    read--;
+                }
+                computation.processInput(buffer, read);
             }
 
             String result = computation.getResult();
