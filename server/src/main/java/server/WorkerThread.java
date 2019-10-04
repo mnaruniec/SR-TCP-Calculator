@@ -26,7 +26,9 @@ public class WorkerThread implements Runnable {
         Socket socket = null;
         try {
             while (true) {
+                socket = null;
                 queue.put(waiter);
+                this.log("Ready for next request.");
                 socket = waiter.take();
                 this.log("Received new connection.");
                 this.handleConnection(socket);
@@ -55,8 +57,10 @@ public class WorkerThread implements Runnable {
     private void handleConnection(Socket socket) throws IOException {
         WorkerComputation computation = new WorkerComputation();
         try (
-            DataInputStream inStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-            DataOutputStream outStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+            DataInputStream inStream =
+                    new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream outStream =
+                    new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
         ) {
             while (true) {
                 int len = inStream.readInt();

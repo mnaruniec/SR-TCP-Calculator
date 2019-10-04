@@ -3,6 +3,10 @@ package server;
 import java.math.BigInteger;
 
 public class WorkerComputation {
+    // limits for operands' sizes, preventing client from causing server OOM
+    public static final int DECIMAL_LIMIT = 100000000; // ~100MB
+    public static final int BIT_LIMIT = DECIMAL_LIMIT / 80 * 33;
+
     public static String ERROR_MSG = "ERROR";
 
     private BigInteger partialResult = new BigInteger("0");
@@ -17,7 +21,6 @@ public class WorkerComputation {
 
         // last token was an operation char
         if (nextOperation != NextOperation.EXPECTED && nextValue == null) {
-            System.out.println(1);
             error = true;
             return ERROR_MSG;
         }
@@ -32,7 +35,6 @@ public class WorkerComputation {
         }
         for (int i = 0; i < read; i++) {
             byte b = buffer[i];
-            System.out.println("char i: " + b);
             switch(b) {
                 case '\t':
                 case ' ':
@@ -41,7 +43,6 @@ public class WorkerComputation {
                 case '+':
                     if (nextOperation != NextOperation.EXPECTED) {
                         if (!runOperationIfReady()) {
-                            System.out.println(2);
                             error = true;
                         }
                     }
@@ -50,7 +51,6 @@ public class WorkerComputation {
                 case '-':
                     if (nextOperation != NextOperation.EXPECTED) {
                         if (!runOperationIfReady()) {
-                            System.out.println(2);
                             error = true;
                         }
                     }
@@ -60,12 +60,11 @@ public class WorkerComputation {
                     if (b >= '0' && b <= '9' && nextOperation != NextOperation.EXPECTED) {
                         appendDigit((char) b);
                     } else {
-                        System.out.println("4: i = " + i);
-
                         error = true;
                     }
             }
         }
+        this.checkLimits();
     }
 
     private void appendDigit(char c) {
@@ -90,5 +89,13 @@ public class WorkerComputation {
                 : partialResult.subtract(newValue);
         nextOperation = NextOperation.EXPECTED;
         nextValue = null;
+    }
+
+    private void checkLimits() {
+        if (nextValue != null && nextValue.length() > DECIMAL_LIMIT) {
+            error = true;
+        } else if (partialResult.bitCount() > BIT_LIMIT) {
+            error = true;
+        }
     }
 }
