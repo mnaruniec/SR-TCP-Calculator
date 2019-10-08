@@ -16,7 +16,10 @@ public class App {
     private static int port = -1;
 
     public static void main(String[] args) throws IOException {
-        parseArgs(args);
+        if (!parseArgs(args)) {
+            System.out.println("Wrong CLI argument combination.");
+            System.exit(1);
+        }
         String result = "";
         boolean timeout = false;
 
